@@ -1,205 +1,165 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import axios from "axios"
 import {
-  CheckCircleIcon,
   ChevronDownIcon,
   ChevronUpIcon,
-  GithubIcon,
-  LinkedinIcon,
+  CheckCircleIcon,
   XCircleIcon,
+  AlertTriangleIcon,
 } from "lucide-react"
-
-import { Badge } from "../ui/badge"
-import { Button } from "../ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../ui/card"
+import { Button } from "../ui/button"
+import { Badge } from "../ui/badge"
 
-// Mock data for demonstration
-const mockResults = [
-  {
-    id: 1,
-    name: "Alex Johnson",
-    trustScore: 92,
-    github: true,
-    techStackMatch: true,
-    linkedinVerified: true,
-    techStack: ["React", "Node.js", "TypeScript"],
-    experience: [
-      { company: "Tech Solutions Inc.", position: "Senior Developer", duration: "2019-2023" },
-      { company: "Digital Innovations", position: "Frontend Developer", duration: "2016-2019" },
-    ],
-  },
-  {
-    id: 2,
-    name: "Sam Williams",
-    trustScore: 78,
-    github: true,
-    techStackMatch: false,
-    linkedinVerified: true,
-    techStack: ["Angular", "Python", "MongoDB"],
-    experience: [
-      { company: "WebDev Studios", position: "Full Stack Developer", duration: "2020-2023" },
-      { company: "CodeCraft", position: "Junior Developer", duration: "2018-2020" },
-    ],
-  },
-  {
-    id: 3,
-    name: "Taylor Smith",
-    trustScore: 65,
-    github: false,
-    techStackMatch: true,
-    linkedinVerified: true,
-    techStack: ["Vue.js", "Express", "PostgreSQL"],
-    experience: [
-      { company: "Innovative Tech", position: "Backend Developer", duration: "2021-2023" },
-    ],
-  },
-  {
-    id: 4,
-    name: "Jordan Lee",
-    trustScore: 88,
-    github: true,
-    techStackMatch: true,
-    linkedinVerified: false,
-    techStack: ["React", "Django", "AWS"],
-    experience: [
-      { company: "Cloud Solutions", position: "DevOps Engineer", duration: "2020-2023" },
-      { company: "Tech Innovators", position: "System Administrator", duration: "2017-2020" },
-    ],
-  },
-]
+const calculateScore = (details) => {
+  let score = 0
+  if (details.repoExists) score += 20
+  if (!details.isFork) score += 15
+  if (details.commitCount >= 5) score += 25
+  if (!details.noLicense) score += 10
+  if (!details.licenseMismatch) score += 15
+  if (!details.licenseYearMismatch) score += 15
+  return score
+}
 
-export default function ResultsSection() {
+const calculateMeanScore = (repos = []) => {
+  if (!repos.length) return 0
+  const total = repos.reduce((sum, repo) => sum + calculateScore(repo.scoreDetails || {}), 0)
+  return Math.round(total / repos.length)
+}
+
+export default function ResultSection({ sessionId }) {
+  const [resumes, setResumes] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [expandedStates, setExpandedStates] = useState([])
+
+  useEffect(() => {
+    const fetchResumes = async () => {
+      setLoading(true)
+      try {
+        const response = await axios.get(`http://localhost:5000/api/resumes/${sessionId}`)
+        setResumes(response.data)
+        setExpandedStates(new Array(response.data.length).fill(false))
+      } catch (error) {
+        console.error("Failed to fetch resumes:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (sessionId) {
+      fetchResumes()
+    }
+  }, [sessionId])
+
+  const toggleExpanded = (index) => {
+    setExpandedStates((prev) =>
+      prev.map((val, i) => (i === index ? !val : val))
+    )
+  }
+
+  if (loading) return <p className="text-center text-muted-foreground">Loading results...</p>
+  if (!resumes.length) return <p className="text-center text-muted-foreground">No resumes analyzed yet.</p>
+
+  const getScoreBadge = (score) => {
+    if (score >= 85) return "bg-green-100 text-green-800"
+    if (score >= 60) return "bg-yellow-100 text-yellow-800"
+    return "bg-red-100 text-red-800"
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold text-[#723e31]">Verification Results</h2>
-      </div>
-
+      <h2 className="text-2xl font-semibold text-[#723e31]">Verification Results</h2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {mockResults.map((result) => (
-          <ResultCard key={result.id} result={result} />
-        ))}
+        {resumes.map((resume, idx) => {
+          const meanScore = calculateMeanScore(resume.githubAnalysis || [])
+          const expanded = expandedStates[idx] || false
+
+          return (
+            <Card key={idx} className="bg-white border-[#ddd4cd] hover:shadow-lg rounded-2xl">
+              <CardHeader className="pb-1">
+                <CardTitle className="text-xl font-semibold text-[#502b24] truncate flex items-center gap-2">
+                  📄 {resume?.resume?.filename || "Untitled Resume"}
+                </CardTitle>
+                <div className="mt-2">
+                  <Badge className={`text-sm px-3 py-1 rounded-full ${getScoreBadge(meanScore)}`}>
+                    Mean Score: {meanScore}%
+                  </Badge>
+                </div>
+              </CardHeader>
+
+              <CardContent className="pt-2">
+                {!resume.githubAnalysis?.length ? (
+                  <p className="text-sm italic text-muted-foreground">
+                    No GitHub links found in this resume.
+                  </p>
+                ) : expanded ? (
+                  <div className="space-y-4">
+                    {resume.githubAnalysis.map((repo, rIdx) => {
+                      const details = repo.scoreDetails || {}
+                      const score = calculateScore(details)
+
+                      return (
+                        <div key={rIdx} className="border rounded-lg p-3 bg-[#f9f9f9]">
+                          <div className="font-medium text-[#5d4037] mb-1 truncate">{repo.url}</div>
+                          <div className="text-sm mb-2 text-muted-foreground">Repo Score: {score}%</div>
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <StatusBadge condition={details.repoExists} label="Repo Exists" />
+                            <StatusBadge condition={!details.isFork} label="Not a Fork" />
+                            <StatusBadge condition={details.commitCount >= 5} label={`${details.commitCount} Commits`} />
+                            <StatusBadge condition={!details.noLicense} label="Has License" />
+                            <StatusBadge condition={!details.licenseMismatch} label="License OK" />
+                            <StatusBadge condition={!details.licenseYearMismatch} label="Year OK" />
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-[#666]">Click below to view GitHub analysis details.</p>
+                )}
+              </CardContent>
+
+              {resume.githubAnalysis?.length > 0 && (
+                <CardFooter className="pt-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-[#8a5c4d] hover:bg-[#f3f0ed] hover:text-[#502b24]"
+                    onClick={() => toggleExpanded(idx)}
+                  >
+                    {expanded ? (
+                      <>
+                        <ChevronUpIcon className="h-4 w-4 mr-1" /> Hide Details
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDownIcon className="h-4 w-4 mr-1" /> View GitHub Details
+                      </>
+                    )}
+                  </Button>
+                </CardFooter>
+              )}
+            </Card>
+          )
+        })}
       </div>
     </div>
   )
 }
 
-function ResultCard({ result }) {
-  const [expanded, setExpanded] = useState(false)
-
-  const getTrustScoreColor = (score) => {
-    if (score >= 85) return "bg-green-100 text-green-800 "
-    if (score >= 70) return "bg-yellow-100 text-yellow-800 "
-    return "bg-red-100 text-red-800 "
-  }
-
+function StatusBadge({ condition, label }) {
   return (
-    <Card className="overflow-hidden border-[#d9d2cc] bg-white transition-all duration-200 hover:shadow-md ">
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <CardTitle className="text-lg font-medium text-[#723e31] ">{result.name}</CardTitle>
-          <Badge className={getTrustScoreColor(result.trustScore)}>Score: {result.trustScore}%</Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="pb-0">
-        <div className="space-y-3">
-          <div className="flex flex-wrap gap-2">
-            <Badge
-              variant={result.github ? "outline" : "destructive"}
-              className={result.github ? "border-green-500 text-green-700 " : ""}
-            >
-              {result.github ? <CheckCircleIcon className="mr-1 h-3 w-3" /> : <XCircleIcon className="mr-1 h-3 w-3" />}
-              GitHub
-            </Badge>
-
-            <Badge
-              variant={result.techStackMatch ? "outline" : "destructive"}
-              className={result.techStackMatch ? "border-green-500 text-green-700 " : ""}
-            >
-              {result.techStackMatch ? <CheckCircleIcon className="mr-1 h-3 w-3" /> : <XCircleIcon className="mr-1 h-3 w-3" />}
-              Tech Stack
-            </Badge>
-
-            <Badge
-              variant={result.linkedinVerified ? "outline" : "destructive"}
-              className={result.linkedinVerified ? "border-green-500 text-green-700 " : ""}
-            >
-              {result.linkedinVerified ? <CheckCircleIcon className="mr-1 h-3 w-3" /> : <XCircleIcon className="mr-1 h-3 w-3" />}
-              LinkedIn
-            </Badge>
-          </div>
-
-          {expanded && (
-            <div className="mt-4 space-y-4 pt-2">
-              <div>
-                <h4 className="mb-1 text-sm font-medium text-[#723e31] ">Tech Stack</h4>
-                <div className="flex flex-wrap gap-1">
-                  {result.techStack.map((tech) => (
-                    <Badge key={tech} variant="secondary" className="bg-[#f2f1ef] ">
-                      {tech}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h4 className="mb-1 text-sm font-medium text-[#723e31] ">Experience</h4>
-                <div className="space-y-2">
-                  {result.experience.map((exp, index) => (
-                    <div key={index} className="rounded-md bg-[#f2f1ef] p-2 ">
-                      <div className="font-medium">{exp.company}</div>
-                      <div className="text-sm text-gray-600 ">{exp.position}</div>
-                      <div className="text-xs text-gray-500 ">{exp.duration}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex items-center gap-1 border-[#a67564] text-[#723e31] hover:bg-[#d9d2cc]/20 "
-                >
-                  <LinkedinIcon className="h-3 w-3" />
-                  LinkedIn Profile
-                </Button>
-                {result.github && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex items-center gap-1 border-[#a67564] text-[#723e31] hover:bg-[#d9d2cc]/20 "
-                  >
-                    <GithubIcon className="h-3 w-3" />
-                    GitHub
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-center pt-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full text-[#a67564] hover:bg-[#f2f1ef] hover:text-[#723e31]  "
-          onClick={() => setExpanded(!expanded)}
-        >
-          {expanded ? (
-            <>
-              <ChevronUpIcon className="mr-1 h-4 w-4" />
-              Hide Details
-            </>
-          ) : (
-            <>
-              <ChevronDownIcon className="mr-1 h-4 w-4" />
-              View Details
-            </>
-          )}
-        </Button>
-      </CardFooter>
-    </Card>
+    <Badge
+      variant="outline"
+      className={`flex items-center justify-center gap-1 px-2 py-1 ${
+        condition ? "border-green-500 text-green-700" : "border-red-500 text-red-700"
+      }`}
+    >
+      {condition ? <CheckCircleIcon className="h-3 w-3" /> : <XCircleIcon className="h-3 w-3" />}
+      {label}
+    </Badge>
   )
 }

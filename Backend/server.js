@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const uploadRoutes = require('./routes/uploads');
 const analyzeRoutes = require('./routes/analyze');
 const githubRoute = require('./routes/githubAnalysis');
+const resumeRoute = require('./routes/resumeResults');
 
 require('dotenv').config();
 
@@ -27,6 +28,7 @@ app.use('/uploads', express.static('uploads'));
 app.use('/api/upload', uploadRoutes);
 app.use('/analyze', analyzeRoutes);
 app.use('/evaluate', githubRoute);
+app.use('/api', resumeRoute);
 
 
 app.use((req, res, next) => {

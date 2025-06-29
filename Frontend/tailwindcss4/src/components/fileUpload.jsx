@@ -3,13 +3,14 @@ import {useDropzone} from 'react-dropzone'
 import { FileIcon, UploadCloud, X } from "lucide-react";
 import { Button } from "../ui/button"; // Adjust path based on your setup
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card"; 
-import axios from 'axios'
+import axios from 'axios';
 
-const FileUploadPanel = () => {
+
+const FileUploadPanel = ({sessionId, onComplete}) => {
   const [files, setFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef();
-  const sessionID = useRef(Date.now().toString() + Math.random().toString(36).substring(2));
+
   
   const onDrop = useCallback((acceptedFiles) => {
     const validFiles = acceptedFiles.map((file)=> ({
@@ -39,7 +40,7 @@ const FileUploadPanel = () => {
     const formData = new FormData();
     files.forEach(({file}) => {
       formData.append("resumes", file);
-      formData.append("sessionId", sessionID.current);
+      formData.append("sessionId", sessionId);
     });
 
     try {
@@ -50,15 +51,22 @@ const FileUploadPanel = () => {
       })
       console.log("Upload success:", res.data);
 
-      const analyzeRes = await axios.post("http://localhost:5000/analyze/extract-links", {
-          sessionId: sessionID.current
+      const analyzeRes = await axios.post("http://localhost:5000/analyze/extract-links", 
+          {sessionId: sessionId},
+          { headers: { "Content-Type": "application/json" }
       });
       console.log("Analysis Result:", analyzeRes.data);
 
-      const githubRes = await axios.post("http://localhost:5000/evaluate/github", {
-          sessionId: sessionID.current
+      const githubRes = await axios.post("http://localhost:5000/evaluate/github", 
+          {sessionId: sessionId},
+          { headers: { "Content-Type": "application/json" }
       });
       console.log("Github Analysis Result:", analyzeRes.data);
+
+      if (onComplete && typeof onComplete === "function") {
+  console.log("✅ onComplete called after all verification steps");
+  onComplete();
+}
       
     } catch (error) {
       console.error("Upload error:", error)

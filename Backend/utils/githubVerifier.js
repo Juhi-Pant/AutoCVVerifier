@@ -50,27 +50,31 @@ async function analyzeGithubProject(link) {
     else score -=5;
 
     //license analysis 
-    if(licenseData && licenseData.data.content){
-      const licenseText = Buffer.from(licenseRes.data.content, 'base64').toString('utf-8');
-      const match = licenseText.match(/Copyright\s*\(c\)?\s*(\d{4})?\s*(.*)/i);
-      if(match){
-        licenseYear = match[1];
-        licenseOwner = match[2].trim();
-      }
+if (licenseData && licenseData.data.content) {
+  const licenseText = Buffer.from(licenseData.data.content, 'base64').toString('utf-8');
+  const match = licenseText.match(/Copyright\s*\(c\)?\s*(\d{4})?\s*(.*)/i);
 
-      if(licenseOwner && !licenseOwner.toLowerCase().includes(owner.toLowerCase())){
-        scoreDetails.licenseMismatch = {
-          expectedOwner: owner,
-          licenseOwner,
-          warning: 'License owner mismatch'
-        };
-        score-=10;
-      }
-      else{
-        score+=10;
-        scoreDetails.licenseVerified = true;
-      }
-    }
+  if (match) {
+    licenseYear = match[1];
+    licenseOwner = match[2]?.trim();
+  }
+
+  if (licenseOwner && !licenseOwner.toLowerCase().includes(owner.toLowerCase())) {
+    scoreDetails.licenseMismatch = {
+      expectedOwner: owner,
+      licenseOwner,
+      warning: 'License owner mismatch'
+    };
+    score -= 10;
+  } else {
+    scoreDetails.licenseVerified = true;
+    score += 10;
+  }
+
+} else {
+  scoreDetails.noLicense = true;
+}
+
     
     const repoYear = new Date(repoData.data.created_at).getFullYear();
     if(licenseYear && licenseYear!=repoYear){
@@ -94,7 +98,7 @@ async function analyzeGithubProject(link) {
       isValid: false,
       score: 0,
       scoreDetails: {
-        error: err.message
+        error: error.message
       }
   }
 }
