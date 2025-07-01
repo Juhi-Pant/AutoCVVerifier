@@ -20,7 +20,7 @@ router.post('/github', async(req, res) => {
             const githubLinks = links.filter(link=> link.includes('github.com'));
             const results = [];
             for (const link of githubLinks){
-                const analysis = await analyzeGithubProject(link);
+                const analysis = await analyzeGithubProject(link, resume.skills || []);
                 results.push(analysis);
             }
             resume.githubAnalysis = results;

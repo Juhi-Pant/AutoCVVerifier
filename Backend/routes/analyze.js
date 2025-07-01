@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const pdfParse = require('pdf-parse')
 const Resume = require('../models/Resume');
-const { extractLinksFromResume } = require('../utils/parseResume');
+const { extractLinksFromResume, extractSkills } = require('../utils/parseResume');
 
 router.post('/extract-links', async (req, res) => {
 
@@ -23,29 +24,33 @@ router.post('/extract-links', async (req, res) => {
     }
 
     console.log(`Found ${resumes.length} resumes`);
-    const extractedLinks = [];
+    const extractedData = [];
 
     for(const resume of resumes){
+      const buffer = Buffer.from(resume.resume.data);
       const links = await extractLinksFromResume(resume.resume.data, resume.resume.contentType);
+       const parsed = await pdfParse(buffer);
+      const skills = await extractSkills(parsed.text);
       resume.extractedLinks = links;
+      resume.skills = skills;
       await resume.save();
+      
 
-      extractedLinks.push({
+      extractedData.push({
         id: resume._id,
         filename: resume.resume.filename,
         links,
+        skills,
       });
     }
 
-    const uniqueLinks = [...new Set(extractedLinks)];
-
 
     res.status(200).json({
-      message: 'Links extracted successfully',
-      links: uniqueLinks
+      message: 'Links and skills extracted successfully',
+      data: extractedData
     });
   } catch (err) {
-    console.error('Error extracting links:', err);
+    console.error('Error extracting links and skills:', err);
     return res.status(500).json({ error: 'Link extraction failed' });
   }
 });

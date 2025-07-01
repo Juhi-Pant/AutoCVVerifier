@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { extractSkills } = require('../utils/parseResume');
 
 const resumeSchema = new mongoose.Schema({
     sessionId: String,
@@ -15,7 +16,8 @@ const resumeSchema = new mongoose.Schema({
     githubAnalysis: {
         type: [Object],
         default: []
-    }
+    },
+    skills : [],
     
 })
 

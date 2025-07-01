@@ -1,165 +1,201 @@
-"use client"
-
-import { useEffect, useState } from "react"
-import axios from "axios"
+import { useEffect, useState } from "react";
+import axios from "axios";
 import {
-  ChevronDownIcon,
-  ChevronUpIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  AlertTriangleIcon,
-} from "lucide-react"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../ui/card"
-import { Button } from "../ui/button"
-import { Badge } from "../ui/badge"
-
-const calculateScore = (details) => {
-  let score = 0
-  if (details.repoExists) score += 20
-  if (!details.isFork) score += 15
-  if (details.commitCount >= 5) score += 25
-  if (!details.noLicense) score += 10
-  if (!details.licenseMismatch) score += 15
-  if (!details.licenseYearMismatch) score += 15
-  return score
-}
-
-const calculateMeanScore = (repos = []) => {
-  if (!repos.length) return 0
-  const total = repos.reduce((sum, repo) => sum + calculateScore(repo.scoreDetails || {}), 0)
-  return Math.round(total / repos.length)
-}
+  ChevronDown,
+  ChevronUp,
+  CheckCircle,
+  XCircle,
+  FileText,
+  Github
+} from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function ResultSection({ sessionId }) {
-  const [resumes, setResumes] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [expandedStates, setExpandedStates] = useState([])
+  const [resumes, setResumes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [expandedStates, setExpandedStates] = useState([]);
 
   useEffect(() => {
     const fetchResumes = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
-        const response = await axios.get(`http://localhost:5000/api/resumes/${sessionId}`)
-        setResumes(response.data)
-        setExpandedStates(new Array(response.data.length).fill(false))
+        const response = await axios.get(`http://localhost:5000/api/resumes/${sessionId}`);
+        setResumes(response.data);
+        setExpandedStates(new Array(response.data.length).fill(false));
       } catch (error) {
-        console.error("Failed to fetch resumes:", error)
+        console.error("Failed to fetch resumes:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
     if (sessionId) {
-      fetchResumes()
+      fetchResumes();
     }
-  }, [sessionId])
+  }, [sessionId]);
 
   const toggleExpanded = (index) => {
     setExpandedStates((prev) =>
       prev.map((val, i) => (i === index ? !val : val))
-    )
-  }
-
-  if (loading) return <p className="text-center text-muted-foreground">Loading results...</p>
-  if (!resumes.length) return <p className="text-center text-muted-foreground">No resumes analyzed yet.</p>
+    );
+  };
 
   const getScoreBadge = (score) => {
-    if (score >= 85) return "bg-green-100 text-green-800"
-    if (score >= 60) return "bg-yellow-100 text-yellow-800"
-    return "bg-red-100 text-red-800"
-  }
+    if (score >= 85) return "bg-green-900/20 text-green-400 border-green-400/30";
+    if (score >= 60) return "bg-yellow-900/20 text-yellow-400 border-yellow-400/30";
+    return "bg-red-900/20 text-red-400 border-red-400/30";
+  };
+
+  const getTopSkills = (githubAnalysis) => {
+  const skillFrequency = {};
+
+  githubAnalysis?.forEach(repo => {
+    const skills = repo?.scoreDetails?.skillMatch?.detected || [];
+    skills.forEach(skill => {
+      skillFrequency[skill] = (skillFrequency[skill] || 0) + 1;
+    });
+  });
+
+  return Object.entries(skillFrequency)
+    .sort((a, b) => b[1] - a[1]) // sort by frequency
+    .slice(0, 3) // top 3
+    .map(([skill]) => skill);
+};
+
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-semibold text-[#723e31]">Verification Results</h2>
+    <motion.div className="space-y-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+      <h2 className="text-2xl font-bold text-[#64ffda]">Verification Results</h2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {resumes.map((resume, idx) => {
-          const meanScore = calculateMeanScore(resume.githubAnalysis || [])
-          const expanded = expandedStates[idx] || false
+          const meanScore = Math.round(
+            (resume.githubAnalysis?.reduce((sum, repo) => sum + (repo.score || 0), 0) || 0) /
+            (resume.githubAnalysis?.reduce((sum, repo) => sum + (repo.outOf || 100), 0) || 1) * 100
+          );
+
+          const expanded = expandedStates[idx] || false;
 
           return (
-            <Card key={idx} className="bg-white border-[#ddd4cd] hover:shadow-lg rounded-2xl">
-              <CardHeader className="pb-1">
-                <CardTitle className="text-xl font-semibold text-[#502b24] truncate flex items-center gap-2">
-                  📄 {resume?.resume?.filename || "Untitled Resume"}
-                </CardTitle>
-                <div className="mt-2">
-                  <Badge className={`text-sm px-3 py-1 rounded-full ${getScoreBadge(meanScore)}`}>
-                    Mean Score: {meanScore}%
-                  </Badge>
-                </div>
-              </CardHeader>
-
-              <CardContent className="pt-2">
-                {!resume.githubAnalysis?.length ? (
-                  <p className="text-sm italic text-muted-foreground">
-                    No GitHub links found in this resume.
-                  </p>
-                ) : expanded ? (
-                  <div className="space-y-4">
-                    {resume.githubAnalysis.map((repo, rIdx) => {
-                      const details = repo.scoreDetails || {}
-                      const score = calculateScore(details)
-
-                      return (
-                        <div key={rIdx} className="border rounded-lg p-3 bg-[#f9f9f9]">
-                          <div className="font-medium text-[#5d4037] mb-1 truncate">{repo.url}</div>
-                          <div className="text-sm mb-2 text-muted-foreground">Repo Score: {score}%</div>
-                          <div className="grid grid-cols-2 gap-2 text-xs">
-                            <StatusBadge condition={details.repoExists} label="Repo Exists" />
-                            <StatusBadge condition={!details.isFork} label="Not a Fork" />
-                            <StatusBadge condition={details.commitCount >= 5} label={`${details.commitCount} Commits`} />
-                            <StatusBadge condition={!details.noLicense} label="Has License" />
-                            <StatusBadge condition={!details.licenseMismatch} label="License OK" />
-                            <StatusBadge condition={!details.licenseYearMismatch} label="Year OK" />
-                          </div>
-                        </div>
-                      )
-                    })}
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
+              whileHover={{ y: -5 }}
+            >
+              <div className="bg-[#112240] rounded-xl shadow-lg border border-[#1f2d48] overflow-hidden h-full flex flex-col">
+                <div className="p-6 pb-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-[#64ffda] flex-shrink-0" />
+                      <h3 className="text-lg font-semibold text-[#ccd6f6] truncate">
+                        {resume?.resume?.filename || "Untitled Resume"}
+                      </h3>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded-full ${getScoreBadge(meanScore)} border`}>
+                      {meanScore}%
+                    </span>
                   </div>
-                ) : (
-                  <p className="text-sm text-[#666]">Click below to view GitHub analysis details.</p>
-                )}
-              </CardContent>
 
-              {resume.githubAnalysis?.length > 0 && (
-                <CardFooter className="pt-3">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full text-[#8a5c4d] hover:bg-[#f3f0ed] hover:text-[#502b24]"
-                    onClick={() => toggleExpanded(idx)}
-                  >
-                    {expanded ? (
-                      <>
-                        <ChevronUpIcon className="h-4 w-4 mr-1" /> Hide Details
-                      </>
-                    ) : (
-                      <>
-                        <ChevronDownIcon className="h-4 w-4 mr-1" /> View GitHub Details
-                      </>
-                    )}
-                  </Button>
-                </CardFooter>
-              )}
-            </Card>
-          )
+                  {resume.githubAnalysis?.length > 0 && (
+                    <div className="mt-4 text-sm text-[#8892b0]">
+                      <div className="flex items-center mb-1">
+                        <Github className="h-4 w-4 mr-2" />
+                        <span>{resume.githubAnalysis.length} GitHub repos found</span>
+                      </div>
+                      <div className="mt-1">
+                        <span className="font-medium text-[#64ffda]">Top Skills: </span>
+                        {getTopSkills(resume.githubAnalysis).join(', ') || 'N/A'}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {resume.githubAnalysis?.length > 0 ? (
+                  <>
+                    <div className="px-6 pb-4 flex-1">
+                      {expanded ? (
+                        <div className="space-y-3">
+                          {resume.githubAnalysis.map((repo, rIdx) => {
+                            const details = repo.scoreDetails || {};
+                            const percentScore = Math.round((repo.score / repo.outOf) * 100);
+
+                            return (
+                              <motion.div
+                                key={rIdx}
+                                className="border border-[#1f2d48] rounded-lg p-3 bg-[#0a192f]"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: rIdx * 0.05 }}
+                              >
+                                <div className="font-medium text-[#64ffda] mb-1 truncate text-sm">
+                                  {repo.url.replace(/^https?:\/\//, '')}
+                                </div>
+                                <div className="text-xs mb-1 text-[#8892b0]">Score: {percentScore}%</div>
+                                <div className="text-xs mb-1 text-[#8892b0]">Owner: {repo.url.split("/")[3]}</div>
+                                <div className="text-xs mb-2 text-[#8892b0]">Commits: {repo.scoreDetails?.commitCount || 0}</div>
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                  <StatusBadge condition={details.repoExists} label="Repo Exists" />
+                                  <StatusBadge condition={!details.isFork} label="Not a Fork" />
+                                  <StatusBadge condition={details.commitCount >= 5} label={`${details.commitCount} Commits`} />
+                                  <StatusBadge condition={!details.noLicense} label="Has License" />
+                                  <StatusBadge condition={!details.licenseMismatch} label="License OK" />
+                                  <StatusBadge condition={!details.licenseYearMismatch} label="Year OK" />
+                                </div>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-[#8892b0]">Click below to view GitHub analysis details</p>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => toggleExpanded(idx)}
+                      className="w-full py-3 text-sm font-medium text-[#64ffda] hover:bg-[#1f2d48] transition-colors flex items-center justify-center gap-1"
+                    >
+                      {expanded ? (
+                        <>
+                          <ChevronUp className="h-4 w-4" /> Hide Details
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-4 w-4" /> View Details
+                        </>
+                      )}
+                    </button>
+                  </>
+                ) : (
+                  <div className="px-6 pb-6">
+                    <p className="text-sm text-[#8892b0] italic">No GitHub links found in this resume</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          );
         })}
       </div>
-    </div>
-  )
+    </motion.div>
+  );
 }
 
 function StatusBadge({ condition, label }) {
   return (
-    <Badge
-      variant="outline"
-      className={`flex items-center justify-center gap-1 px-2 py-1 ${
-        condition ? "border-green-500 text-green-700" : "border-red-500 text-red-700"
+    <motion.div
+      className={`text-xs px-2 py-1 rounded flex items-center gap-1 ${
+        condition
+          ? "bg-green-900/10 text-green-400 border border-green-400/20"
+          : "bg-red-900/10 text-red-400 border border-red-400/20"
       }`}
+      whileHover={{ scale: 1.03 }}
     >
-      {condition ? <CheckCircleIcon className="h-3 w-3" /> : <XCircleIcon className="h-3 w-3" />}
+      {condition ? (
+        <CheckCircle className="h-3 w-3" />
+      ) : (
+        <XCircle className="h-3 w-3" />
+      )}
       {label}
-    </Badge>
-  )
+    </motion.div>
+  );
 }
