@@ -63,13 +63,13 @@ export default function LandingPage() {
             className="flex items-center space-x-2"
             whileHover={{ scale: 1.05 }}
           >
-            <div className="w-8 h-8 bg-[#64ffda] rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-[#64ffda] rounded-full flex items-center justify-center cursor-pointer"  onClick={() => navigate('/')}>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#0a192f]" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd" />
                 <path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z" />
               </svg>
             </div>
-            <h1 className="text-xl font-bold text-[#64ffda]">ResumeGuard</h1>
+            <h1 className="text-xl font-bold text-[#64ffda]">SkillVeritas</h1>
           </motion.div>
           
           <motion.button
@@ -104,7 +104,7 @@ export default function LandingPage() {
               className="text-lg md:text-xl text-[#ccd6f6] mb-8 max-w-xl"
               variants={item}
             >
-              ResumeGuard analyzes GitHub activity to validate technical skills listed on resumes, saving recruiters time and reducing hiring risks.
+              SkillVeritas analyzes GitHub projects in resumes to validate real technical skills, enabling faster shortlisting and reducing hiring risks.
             </motion.p>
             
             <motion.div className="flex flex-col sm:flex-row gap-4" variants={item}>
@@ -174,18 +174,18 @@ export default function LandingPage() {
           >
             <ProblemCard 
               icon="📄" 
-              title="Fake Projects" 
-              description="Candidates often list projects they didn't actually work on to inflate their experience." 
+              title="Skill Misrepresentation" 
+              description="Candidates often list skills they don't actually use. SkillVeritas verifies skills through real GitHub contributions, ensuring authenticity." 
             />
             <ProblemCard 
               icon="🔗" 
-              title="Forked Repositories" 
-              description="GitHub profiles filled with forked repos that give false impression of original work." 
+              title="Time-Consuming Screening" 
+              description=" Manually reviewing resumes and portfolios is slow. Our platform automates technical validation, accelerating candidate shortlisting." 
             />
             <ProblemCard 
               icon="🤥" 
-              title="Skill Exaggeration" 
-              description="Overstated technical skills that don't match actual capabilities." 
+              title="Lack of Proof of Work"
+              description="Traditional resumes don’t show real-world project impact. SkillVeritas bridges this gap by analyzing live repositories for practical skill evidence." 
             />
           </motion.div>
         </div>
@@ -205,7 +205,7 @@ export default function LandingPage() {
               Powerful <span className="text-[#64ffda]">Features</span>
             </h3>
             <p className="text-[#ccd6f6] max-w-2xl mx-auto">
-              ResumeGuard provides comprehensive tools to validate candidate skills and streamline your hiring process.
+              SkillVeritas provides comprehensive tools to validate candidate skills and streamline your hiring process.
             </p>
             <div className="w-20 h-1 bg-[#64ffda] mx-auto mt-4"></div>
           </motion.div>
@@ -218,33 +218,33 @@ export default function LandingPage() {
             viewport={{ once: true }}
           >
             <FeatureCard 
-              title="GitHub Authenticity Check" 
-              description="Identifies original vs forked repositories to validate actual project work." 
+              title="GitHub Skill Verification" 
+              description="Analyzes linked GitHub repos to validate claimed technical skills." 
               icon="✅"
             />
             <FeatureCard 
-              title="Skill Validation" 
-              description="Cross-references listed skills with GitHub contributions and code analysis." 
+              title="Automated Resume Parsing" 
+              description="Extracts GitHub links and keywords from uploaded resumes instantly." 
               icon="🔍"
             />
             <FeatureCard 
-              title="Automated Reports" 
-              description="Generates comprehensive PDF reports with skill verification results." 
+              title="Match Score Calculation" 
+              description="Generates a skill match percentage based on recruiter-defined requirements." 
               icon="📊"
             />
             <FeatureCard 
-              title="Plagiarism Detection" 
-              description="Flags potentially copied projects or resume content." 
+              title="Project-Based Proof" 
+              description="Highlights skills demonstrated through real, live code contributions." 
               icon="⚠️"
             />
             <FeatureCard 
-              title="Activity Timeline" 
-              description="Visualizes candidate's coding activity over time to assess consistency." 
+              title="Repo Health Checks" 
+              description="Evaluates repositories for activity, originality, and license compliance." 
               icon="⏳"
             />
             <FeatureCard 
-              title="Team Collaboration" 
-              description="Share and comment on candidate reports with your hiring team." 
+              title="Candidate Ranking" 
+              description="Automatically sorts candidates by relevance and skill alignment." 
               icon="👥"
             />
           </motion.div>
@@ -277,19 +277,19 @@ export default function LandingPage() {
             <WorkStep 
               number="1" 
               title="Upload Resume" 
-              description="Candidate submits their resume or GitHub profile link." 
+              description="Submit candidate resumes in PDF format to begin analysis." 
             />
             <div className="hidden lg:block text-[#64ffda] text-4xl">→</div>
             <WorkStep 
               number="2" 
-              title="Automated Analysis" 
-              description="Our system scans GitHub activity and validates listed skills." 
+              title="Set Required Skills" 
+              description="Enter the technical skills you're hiring for." 
             />
             <div className="hidden lg:block text-[#64ffda] text-4xl">→</div>
             <WorkStep 
               number="3" 
-              title="Get Detailed Report" 
-              description="Receive a comprehensive verification report within minutes." 
+              title="Get Ranked Results" 
+              description="View skill-matched candidates with GitHub-backed proof and scores." 
             />
           </motion.div>
         </div>
@@ -319,19 +319,19 @@ export default function LandingPage() {
             viewport={{ once: true }}
           >
             <TestimonialCard 
-              quote="ResumeGuard saved us countless hours in technical screening and helped us avoid several bad hires." 
+              quote="SkillVeritas Lorem ipsum dolor sit amet, consectetur adipiscing elit sed." 
               author="Sarah K., Tech Recruiter" 
-              role="Hiring Manager at TechCorp" 
+              role="Hiring Manager at XYZ" 
             />
             <TestimonialCard 
-              quote="The GitHub validation feature alone is worth the price. It's transformed our hiring process." 
+              quote="SkillVeritas Lorem ipsum dolor sit amet, consectetur adipiscing elit sed." 
               author="Michael T." 
               role="CTO at StartupX" 
             />
             <TestimonialCard 
-              quote="Finally a tool that actually verifies what candidates claim to know. Game changer for technical hiring." 
+              quote="SkillVeritas Lorem ipsum dolor sit amet, consectetur adipiscing elit sed." 
               author="Priya M." 
-              role="Lead Recruiter at DevHouse" 
+              role="Lead Recruiter at XYZ" 
             />
           </motion.div>
         </div>
@@ -353,7 +353,7 @@ export default function LandingPage() {
             Ready to <span className="text-[#64ffda]">Transform</span> Your Hiring Process?
           </h3>
           <p className="text-[#ccd6f6] max-w-2xl mx-auto mb-8">
-            Join hundreds of recruiters who trust ResumeGuard for accurate technical candidate evaluation.
+            Join hundreds of recruiters who trust SkillVeritas for accurate technical candidate evaluation.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <motion.button
@@ -389,7 +389,7 @@ export default function LandingPage() {
                   <path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z" />
                 </svg>
               </div>
-              <h1 className="text-xl font-bold text-[#64ffda]">ResumeGuard</h1>
+              <h1 className="text-xl font-bold text-[#64ffda]">SkillVeritas</h1>
             </motion.div>
             
             <div className="flex space-x-6 mb-6 md:mb-0">
@@ -408,7 +408,7 @@ export default function LandingPage() {
                 Terms
               </motion.a>
               <motion.a 
-                href="https://github.com/Juhi-Pant/ResumeGuard" 
+                href="https://github.com/Juhi-Pant/AutoCVVerifier" 
                 target="_blank"
                 className="text-[#ccd6f6] hover:text-[#64ffda] transition-colors duration-300"
                 whileHover={{ y: -2 }}
@@ -429,7 +429,7 @@ export default function LandingPage() {
                 </svg>
               </motion.a>
               <motion.a 
-                href="https://linkedin.com/in/juhipant" 
+                href="https://www.linkedin.com/in/juhi-pant-6b192b16b/" 
                 target="_blank"
                 className="w-10 h-10 rounded-full bg-[#112240] flex items-center justify-center text-[#ccd6f6] hover:text-[#64ffda] transition-colors duration-300"
                 whileHover={{ y: -3, backgroundColor: "#1f2d48" }}
@@ -441,7 +441,7 @@ export default function LandingPage() {
                 </svg>
               </motion.a>
               <motion.a 
-                href="mailto:juhi@example.com" 
+                href="mailto:pantjuhi2009@gmail.com" 
                 className="w-10 h-10 rounded-full bg-[#112240] flex items-center justify-center text-[#ccd6f6] hover:text-[#64ffda] transition-colors duration-300"
                 whileHover={{ y: -3, backgroundColor: "#1f2d48" }}
               >
@@ -455,7 +455,7 @@ export default function LandingPage() {
           
           <div className="mt-12 pt-6 border-t border-[#1f2d48] text-center text-[#8892b0] text-sm">
             <p>Built with ❤️ by <span className="text-[#64ffda]">Juhi Pant</span></p>
-            <p className="mt-2">© {new Date().getFullYear()} ResumeGuard. All rights reserved.</p>
+            <p className="mt-2">© {new Date().getFullYear()} SkillVeritas. All rights reserved.</p>
           </div>
         </div>
       </footer>

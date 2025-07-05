@@ -5,7 +5,8 @@ const uploadRoutes = require('./routes/uploads');
 const analyzeRoutes = require('./routes/analyze');
 const githubRoute = require('./routes/githubAnalysis');
 const resumeRoute = require('./routes/resumeResults');
-const filterCandidates = require('./routes/filterCandidates')
+const filterCandidates = require('./routes/filterCandidates');
+const viewResumeRoute = require('./routes/viewResume');
 
 require('dotenv').config();
 
@@ -31,6 +32,7 @@ app.use('/analyze', analyzeRoutes);
 app.use('/evaluate', githubRoute);
 app.use('/api', resumeRoute);
 app.use('/api', filterCandidates);
+app.use('/api', viewResumeRoute);
 
 
 app.use((req, res, next) => {

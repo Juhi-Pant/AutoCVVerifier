@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Moon, Sun, ChevronDown, ChevronUp } from "lucide-react";
 import { motion } from "framer-motion";
+import { useNavigate } from 'react-router-dom';
 
 export default function DashboardLayout({ children }) {
   const [theme, setTheme] = useState("dark");
   const [showFilters, setShowFilters] = useState(false);
+  const navigate = useNavigate()
 
   // Apply theme class to body
   useEffect(() => {
@@ -29,13 +31,13 @@ export default function DashboardLayout({ children }) {
             className="flex items-center space-x-2"
             whileHover={{ scale: 1.05 }}
           >
-            <div className="w-8 h-8 bg-[#64ffda] rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-[#64ffda] rounded-full flex items-center justify-center cursor-pointer" onClick={()=> navigate('/')}>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#0a192f]" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd" />
                 <path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z" />
               </svg>
             </div>
-            <h1 className="text-xl font-bold text-[#64ffda]">ResumeGuard</h1>
+            <h1 className="text-xl font-bold text-[#64ffda]">SkillVeritas</h1>
           </motion.div>
           
           <div className="flex items-center space-x-4">

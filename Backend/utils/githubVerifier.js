@@ -57,6 +57,22 @@ async function analyzeGithubProject(link, resumeSkills = []) {
     const treeData = await axios.get(treeURL, { headers });
     const allPaths = treeData.data.tree.map(entry => entry.path);
 
+        const repoMeta = await axios.get(repoURL, { headers });
+    const repoData = repoMeta.data;
+
+    const repoExists = true;
+    const isFork = repoData.fork;
+    const licenseInfo = repoData.license?.spdx_id || null;
+    const licenseYear = new Date(repoData.created_at).getFullYear();
+    const currentYear = new Date().getFullYear();
+    const licenseYearMismatch = (currentYear - licenseYear) > 5;
+
+    const licenseMismatch = licenseInfo !== "MIT" && licenseInfo !== "Apache-2.0";
+    const noLicense = !licenseInfo;
+
+        const commitsRes = await axios.get(`${repoURL}/commits`, { headers });
+    const commitCount = Array.isArray(commitsRes.data) ? commitsRes.data.length : 0;
+
     // --- 1. Detect from file extensions
     const detectedSkillsSet = new Set();
     for (const path of allPaths) {
@@ -100,7 +116,14 @@ async function analyzeGithubProject(link, resumeSkills = []) {
       url: link,
       isValid: true,
       detectedSkills,
-
+      scoreDetails: {
+        repoExists,
+        isFork,
+        commitCount,
+        noLicense,
+        licenseMismatch,
+        licenseYearMismatch,
+      }
     };
 
   } catch (error) {

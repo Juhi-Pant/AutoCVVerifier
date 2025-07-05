@@ -1,9 +1,20 @@
 const mongoose = require('mongoose');
 
+const githubScoreDetailsSchema = new mongoose.Schema({
+  error: String,
+  repoExists: Boolean,
+  isFork: Boolean,
+  commitCount: Number,
+  noLicense: Boolean,
+  licenseMismatch: Boolean,
+  licenseYearMismatch: Boolean
+}, { _id: false });
+
 const githubAnalysisSchema = new mongoose.Schema({
   url: String,
   isValid: Boolean,
-  detectedSkills: [String]  // ← Only this is needed
+  detectedSkills: [String],
+  scoreDetails: githubScoreDetailsSchema,
 }, { _id: false });
 
 

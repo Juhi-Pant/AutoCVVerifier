@@ -2,8 +2,6 @@ const express = require('express');
 const router = express.Router();
 const upload = require('../middleware/upload');
 const Resume = require('../models/Resume');
-const axios = require('axios');
-
 router.post('/', upload.any(), async (req, res) => {
   try {
     const files = req.files; // array of files

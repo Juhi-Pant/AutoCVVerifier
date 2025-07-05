@@ -90,11 +90,18 @@ export default function ResultSection({ sessionId, filteredResumes = [], totalSk
               transition={{ delay: idx * 0.1 }}
               whileHover={{ y: -5 }}
             >
-              <div className="bg-[#112240] rounded-xl shadow-lg border border-[#1f2d48] overflow-hidden h-full flex flex-col">
+              <div className="bg-[#112240] rounded-xl shadow-lg border border-[#1f2d48] overflow-hidden h-full flex flex-col ">
                 <div className="p-6 pb-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <FileText className="h-5 w-5 text-[#64ffda] flex-shrink-0" />
+                      <a 
+                      href={`http://localhost:5000/api/resume/${resume._id}/view`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="View Resume"
+                      >
+                        <FileText className="h-5 w-5 text-[#64ffda] flex-shrink-0" />
+                      </a>
                       <h3 className="text-lg font-semibold text-[#ccd6f6] truncate">
                         {resume?.resume?.filename || "Untitled Resume"}
                       </h3>
