@@ -4,7 +4,7 @@ import { FileIcon, UploadCloud, X } from "lucide-react";
 import { motion } from "framer-motion";
 import axios from 'axios';
 
-const FileUploadPanel = ({ sessionId, onComplete }) => {
+const FileUploadPanel = ({ sessionId, onComplete, onVerificationComplete }) => {
   const [files, setFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef();
@@ -62,9 +62,12 @@ const FileUploadPanel = ({ sessionId, onComplete }) => {
 
       if (onComplete && typeof onComplete === "function") {
         onComplete();
+        onVerificationComplete(true);
       }
+
     } catch (error) {
       console.error("Upload error:", error);
+      onVerificationComplete(false);
     } finally {
       setIsUploading(false);
     }

@@ -10,7 +10,9 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-export default function ResultSection({ sessionId }) {
+export default function ResultSection({ sessionId, filteredResumes = [], totalSkills = [] }) {
+  const fetchedResumes = Array.isArray(filteredResumes) ? filteredResumes : [];
+
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [expandedStates, setExpandedStates] = useState([]);
@@ -29,10 +31,13 @@ export default function ResultSection({ sessionId }) {
       }
     };
 
-    if (sessionId) {
+    if (Array.isArray(filteredResumes) && filteredResumes.length) {
+      setResumes(filteredResumes);
+      setExpandedStates(new Array(filteredResumes.length).fill(false));
+    } else if (sessionId) {
       fetchResumes();
     }
-  }, [sessionId]);
+  }, [sessionId, filteredResumes]);
 
   const toggleExpanded = (index) => {
     setExpandedStates((prev) =>
@@ -46,33 +51,35 @@ export default function ResultSection({ sessionId }) {
     return "bg-red-900/20 text-red-400 border-red-400/30";
   };
 
-  const getTopSkills = (githubAnalysis) => {
-  const skillFrequency = {};
+  const getSkillMatchScore = (detectedSkills = [], totalSkills = []) => {
+    if (!Array.isArray(totalSkills) || totalSkills.length === 0) return 0;
+    const matched = detectedSkills.filter(skill => totalSkills.includes(skill));
+    return Math.round((matched.length / totalSkills.length) * 100);
+  };
 
-  githubAnalysis?.forEach(repo => {
-    const skills = repo?.scoreDetails?.skillMatch?.detected || [];
-    skills.forEach(skill => {
-      skillFrequency[skill] = (skillFrequency[skill] || 0) + 1;
-    });
+  const getMeanSkillScore = (githubAnalysis = [], totalSkills = []) => {
+    if (!Array.isArray(githubAnalysis) || githubAnalysis.length === 0) return 0;
+    const scores = githubAnalysis.map(repo => getSkillMatchScore(repo.detectedSkills || [], totalSkills));
+    const sum = scores.reduce((a, b) => a + b, 0);
+    return Math.round(sum / scores.length);
+  };
+
+  const sortedResumes = [...resumes].sort((a, b) => {
+    const aScore = getMeanSkillScore(a.githubAnalysis, totalSkills);
+    const bScore = getMeanSkillScore(b.githubAnalysis, totalSkills);
+    return bScore - aScore;
   });
-
-  return Object.entries(skillFrequency)
-    .sort((a, b) => b[1] - a[1]) // sort by frequency
-    .slice(0, 3) // top 3
-    .map(([skill]) => skill);
-};
-
 
   return (
     <motion.div className="space-y-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
-      <h2 className="text-2xl font-bold text-[#64ffda]">Verification Results</h2>
+      <h2 className="text-2xl font-bold text-[#64ffda]">
+        {fetchedResumes.length ? "Filtered Candidates" : "Verification Results"}
+      </h2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {resumes.map((resume, idx) => {
-          const meanScore = Math.round(
-            (resume.githubAnalysis?.reduce((sum, repo) => sum + (repo.score || 0), 0) || 0) /
-            (resume.githubAnalysis?.reduce((sum, repo) => sum + (repo.outOf || 100), 0) || 1) * 100
-          );
-
+        {sortedResumes.map((resume, idx) => {
+          const matchedSkills = resume.matchedSkills || [];
+          const matchScore = totalSkills.length ? Math.round((matchedSkills.length / totalSkills.length) * 100) : 0;
+          const meanScore = getMeanSkillScore(resume.githubAnalysis, totalSkills);
           const expanded = expandedStates[idx] || false;
 
           return (
@@ -104,8 +111,12 @@ export default function ResultSection({ sessionId }) {
                         <span>{resume.githubAnalysis.length} GitHub repos found</span>
                       </div>
                       <div className="mt-1">
-                        <span className="font-medium text-[#64ffda]">Top Skills: </span>
-                        {getTopSkills(resume.githubAnalysis).join(', ') || 'N/A'}
+                        <span className="font-medium text-[#64ffda]">Matched Skills: </span>
+                        {matchedSkills.length ? matchedSkills.join(", ") : "N/A"}
+                      </div>
+                      <div className="mt-1">
+                        <span className="font-medium text-[#64ffda]">Match Score: </span>
+                        {matchScore}%
                       </div>
                     </div>
                   )}
@@ -118,7 +129,8 @@ export default function ResultSection({ sessionId }) {
                         <div className="space-y-3">
                           {resume.githubAnalysis.map((repo, rIdx) => {
                             const details = repo.scoreDetails || {};
-                            const percentScore = Math.round((repo.score / repo.outOf) * 100);
+                            const score = getSkillMatchScore(repo.detectedSkills || [], totalSkills);
+                            const matched = totalSkills.filter(skill => (repo.detectedSkills || []).includes(skill));
 
                             return (
                               <motion.div
@@ -131,13 +143,13 @@ export default function ResultSection({ sessionId }) {
                                 <div className="font-medium text-[#64ffda] mb-1 truncate text-sm">
                                   {repo.url.replace(/^https?:\/\//, '')}
                                 </div>
-                                <div className="text-xs mb-1 text-[#8892b0]">Score: {percentScore}%</div>
+                                <div className="text-xs mb-1 text-[#8892b0]">Score: {score}%</div>
                                 <div className="text-xs mb-1 text-[#8892b0]">Owner: {repo.url.split("/")[3]}</div>
-                                <div className="text-xs mb-2 text-[#8892b0]">Commits: {repo.scoreDetails?.commitCount || 0}</div>
+                                <div className="text-xs mb-2 text-[#8892b0]">Matched Skills: {matched.length ? matched.join(', ') : 'N/A'}</div>
                                 <div className="grid grid-cols-2 gap-2 text-xs">
                                   <StatusBadge condition={details.repoExists} label="Repo Exists" />
                                   <StatusBadge condition={!details.isFork} label="Not a Fork" />
-                                  <StatusBadge condition={details.commitCount >= 5} label={`${details.commitCount} Commits`} />
+                                  <StatusBadge condition={details.commitCount >= 5} label={`${details.commitCount || 0} Commits`} />
                                   <StatusBadge condition={!details.noLicense} label="Has License" />
                                   <StatusBadge condition={!details.licenseMismatch} label="License OK" />
                                   <StatusBadge condition={!details.licenseYearMismatch} label="Year OK" />
