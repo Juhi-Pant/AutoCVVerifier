@@ -36,7 +36,7 @@ export default function RecruiterFilterSection({ sessionId, onResults, isVerifie
     if (!requiredSkills.length) return;
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:5000/api/filter-candidates", {
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_API_URL}/api/filter-candidates`, {
         skills: requiredSkills,
         sessionId,
       });

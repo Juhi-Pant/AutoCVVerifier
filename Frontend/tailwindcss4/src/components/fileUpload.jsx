@@ -41,20 +41,20 @@ const FileUploadPanel = ({ sessionId, onComplete, onVerificationComplete }) => {
     });
 
     try {
-      const res = await axios.post("http://localhost:5000/api/upload", formData, {
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_API_URL}/api/upload`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         }
       });
       console.log("Upload success:", res.data);
 
-      const analyzeRes = await axios.post("http://localhost:5000/analyze/extract-links", 
+      const analyzeRes = await axios.post(`${import.meta.env.VITE_BACKEND_API_URL}/analyze/extract-links`, 
         { sessionId: sessionId },
         { headers: { "Content-Type": "application/json" } }
       );
       console.log("Analysis Result:", analyzeRes.data);
 
-      const githubRes = await axios.post("http://localhost:5000/evaluate/github", 
+      const githubRes = await axios.post(`${import.meta.env.VITE_BACKEND_API_URL}/evaluate/github`, 
         { sessionId: sessionId },
         { headers: { "Content-Type": "application/json" } }
       );

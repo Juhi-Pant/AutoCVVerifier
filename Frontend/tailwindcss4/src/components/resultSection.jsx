@@ -21,7 +21,7 @@ export default function ResultSection({ sessionId, filteredResumes = [], totalSk
     const fetchResumes = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`http://localhost:5000/api/resumes/${sessionId}`);
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_API_URL}/api/resumes/${sessionId}`);
         setResumes(response.data);
         setExpandedStates(new Array(response.data.length).fill(false));
       } catch (error) {
