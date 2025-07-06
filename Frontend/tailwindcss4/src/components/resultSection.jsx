@@ -95,7 +95,7 @@ export default function ResultSection({ sessionId, filteredResumes = [], totalSk
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <a 
-                      href={`http://localhost:5000/api/resume/${resume._id}/view`}
+                      href={`${import.meta.env.VITE_BACKEND_API_URL}/${resume._id}/view`}
                       target="_blank"
                       rel="noopener noreferrer"
                       title="View Resume"
